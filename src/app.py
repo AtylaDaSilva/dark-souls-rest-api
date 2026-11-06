@@ -1,8 +1,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import select
+from sqlalchemy import select, inspect
 from sqlalchemy.orm import DeclarativeBase
 from pathlib import Path
+from src.functions import serialize
 
 # Init app and database
 app = Flask(__name__)
@@ -44,7 +45,7 @@ def main():
 @app.route("/weapons", methods=["GET"])
 def weapons():
     with db.session() as session:
-        return [
-            {"id": weap.id, "name": weap.name}
-            for weap in session.execute(select(Weapon)).scalars().all()
-        ]
+        result = []
+        for weap in session.execute(select(Weapon)).scalars().all():
+            result.append(serialize(weap))
+        return result
