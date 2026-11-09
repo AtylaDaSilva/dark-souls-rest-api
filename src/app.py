@@ -57,3 +57,12 @@ def weapon_classes():
         for weap_class in session.execute(select(WeaponClass)).scalars().all():
             result.append(serialize(weap_class))
         return result
+
+
+@app.route("/weapons/classes/id/<int:weapon_cls_id>", methods=["GET"])
+def weapon_class_id(weapon_cls_id: int):
+    with db.session() as session:
+        record = session.execute(
+            select(WeaponClass).where(WeaponClass.id == weapon_cls_id)
+        ).first()
+        return serialize(record[0]) if record else {}
