@@ -1,9 +1,12 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import String, ForeignKey
+from sqlalchemy import inspect
 
 
 class Base(DeclarativeBase):
-    pass
+    @classmethod
+    def get_fields(cls):
+        return inspect(cls).columns.keys()
 
 
 class WeaponClass(Base):
