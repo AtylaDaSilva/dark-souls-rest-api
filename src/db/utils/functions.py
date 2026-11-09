@@ -2,6 +2,7 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import DeclarativeBase
 from typing import Any, Callable
 from itertools import chain
+from warnings import deprecated
 from src.db.models import WeaponClass, Weapon
 
 
@@ -197,6 +198,7 @@ def populate_database(db_session: Callable, objs: list):
             session.rollback()
 
 
+@deprecated("DEPRECATED. Use the `Base.serialize` method.")
 def serialize(model: DeclarativeBase) -> dict[str, Any]:
     """Serializes a SQLAlchemy/Flask-SQLAlchemy model into a python `dict`.
 

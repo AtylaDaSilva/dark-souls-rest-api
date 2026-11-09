@@ -1,12 +1,25 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import String, ForeignKey
 from sqlalchemy import inspect
+from typing import Any
 
 
 class Base(DeclarativeBase):
     @classmethod
     def get_fields(cls):
         return inspect(cls).columns.keys()
+
+    def serialize(self) -> dict[str, Any]:
+        """Serializes this model into a python `dict`.
+
+        Returns:
+            dict[str, Any]: A `dict` representation of this model, containing only its manually-set properties.
+        """
+        serialized = {}
+        fields: list[str] = inspect(self.__class__).columns.keys()
+        for f in fields:
+            serialized[f] = getattr(self, f)
+        return serialized
 
 
 class WeaponClass(Base):
