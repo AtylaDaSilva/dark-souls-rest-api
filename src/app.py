@@ -43,6 +43,13 @@ def weapons():
         return result
 
 
+@app.route("/weapons/id/<int:weapon_id>", methods=["GET"])
+def weapon_id(weapon_id: int):
+    with db.session() as session:
+        record = session.execute(select(Weapon).where(Weapon.id == weapon_id)).first()
+        return serialize(record[0]) if record else {}
+
+
 @app.route("/weapons/classes", methods=["GET"])
 def weapon_classes():
     with db.session() as session:
