@@ -1,9 +1,9 @@
 from sqlalchemy import inspect
-from sqlalchemy.orm import DeclarativeBase
 from typing import Any, Callable
 from itertools import chain
 from warnings import deprecated
-from src.db.models import WeaponClass, Weapon
+from src.db.models import Base, WeaponClass, Weapon
+from src.db.utils.exceptions import MissingRequestFormItem
 
 
 def get_default_db_objects() -> list[DeclarativeBase]:
@@ -213,3 +213,15 @@ def serialize(model: DeclarativeBase) -> dict[str, Any]:
     for f in fields:
         serialized[f] = getattr(model, f)
     return serialized
+
+
+def check_required_fields(
+    request_form: dict[str, Any], model: type[Base], exclude: list[str] | None = None
+) -> None:
+    required_fields = model.get_fields()
+    exclusions = exclude or []
+    for field in required_fields:
+        print(hasattr(request_form, field))
+        if not hasattr(request_form, field) and field not in exclusions:
+            raise MissingRequestFormItem(field)
+    pass

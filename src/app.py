@@ -1,8 +1,14 @@
-from flask import Flask
+from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
 from pathlib import Path
-from src.db.utils.functions import serialize, get_default_db_objects, populate_database
+from src.db.utils.functions import (
+    serialize,
+    get_default_db_objects,
+    populate_database,
+    check_required_fields,
+)
+from src.db.utils.exceptions import MissingRequestFormItem
 from src.db.models import Base, Weapon, WeaponClass
 
 # Init app and database
@@ -24,6 +30,16 @@ with app.app_context():
     db.create_all()
 
 
+@app.errorhandler(400)
+def resource_not_found(e):
+    return jsonify(status_code=400, error=str(e)), 400
+
+
+@app.errorhandler(500)
+def internal_error(e):
+    return jsonify(status_code=500, error=f"Internal Error: {str(e)}"), 500
+
+
 # Routes
 @app.route("/")
 def main():
@@ -34,13 +50,31 @@ def main():
     return "<h1>Welcome to the Dark Souls REST API!</h1>"
 
 
-@app.route("/weapons", methods=["GET"])
+@app.route("/weapons", methods=["GET", "POST"])
 def weapons():
-    with db.session() as session:
-        result = []
-        for weap in session.execute(select(Weapon)).scalars().all():
-            result.append(serialize(weap))
-        return result
+    match request.method:
+        case "GET":
+            with db.session() as session:
+                result = []
+                for weap in session.execute(select(Weapon)).scalars().all():
+                    result.append(weap.serialize())
+                return result
+        case "POST":
+            try:
+                check_required_fields(request.form, Weapon, exclude=["id"])
+                new_weap = Weapon(**request.form)
+                try:
+                    with db.session() as session:
+                        session.add(new_weap)
+                except Exception as e:
+                    session.rollback()
+                    abort(500, e)
+
+            except MissingRequestFormItem as item:
+                abort(400, description=f"Missing '{item}' in request body.")
+            return {}
+        case _:
+            abort(400)
 
 
 @app.route("/weapons/id/<int:weapon_id>", methods=["GET"])

@@ -1,0 +1,2 @@
+class MissingRequestFormItem(Exception):
+    pass
